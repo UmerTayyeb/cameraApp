@@ -9,6 +9,8 @@ import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -26,7 +28,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import android.widget.TextView;
+//import android.widget.TextView;
 import android.widget.EditText;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
@@ -46,21 +48,21 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "app";
 
     private ImageView imageView;
-    private TextView textView;
 
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getSupportActionBar().hide();
         setContentView(R.layout.activity_main);
         copyAssets("eng.traineddata");
         imageView = findViewById(R.id.imageView);
-        textView = findViewById(R.id.textView);
         editTextEditedText = findViewById(R.id.editTextEditedText); // Initialize editTextEditedText
         Button btnCapture = findViewById(R.id.btnCapture);
         tessBaseAPI = new TessBaseAPI();
         tessBaseAPI.init(getFilesDir().getAbsolutePath(), "eng"); // Initialize Tesseract with the "eng" language data
-        //editTextVariable = findViewById(R.id.editTextVariable);
         btnUpdateText = findViewById(R.id.btnUpdateText);
 
         btnCapture.setOnClickListener(new View.OnClickListener() {
@@ -73,8 +75,6 @@ public class MainActivity extends AppCompatActivity {
         btnUpdateText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //String newText = editTextVariable.getText().toString();
-                //textView.setText(newText);
 
                 // Update the extracted text with edited text
                 String editedText = editTextEditedText.getText().toString();
@@ -154,20 +154,23 @@ public class MainActivity extends AppCompatActivity {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             if (photo != null) {
                 imageView.setImageBitmap(photo);
-                extractedText = extractTextFromBitmap(photo);
-                Log.d(TAG, extractedText);
-                textView.setText(extractedText);
-                editTextEditedText.setText(extractedText);
+                final String[] extractedText = {extractTextFromBitmap(photo)};
+                Log.d(TAG, extractedText[0]);
+                //editTextVariable.setText(extractedText[0]);
+
+                // Set the extracted text for editing
+                EditText editTextEditedText = findViewById(R.id.editTextEditedText);
+                editTextEditedText.setText(extractedText[0]);
 
                 btnUpdateText.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        String newText = editTextEditedText.getText().toString();
-                        textView.setText(newText);
+                        //String newText = editTextVariable.getText().toString();
 
                         // Update the extracted text with edited text
-                        extractedText = newText;
-                        Log.d(TAG, extractedText);
+                        String editedText = editTextEditedText.getText().toString();
+                        extractedText[0] = editedText;
+                        Log.d(TAG, extractedText[0]);
                     }
                 });
             } else {
@@ -175,7 +178,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 
     private String extractTextFromBitmap(Bitmap bitmap) {
         tessBaseAPI.setImage(bitmap);
