@@ -27,12 +27,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.widget.TextView;
+import android.widget.EditText;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 
+
 public class MainActivity extends AppCompatActivity {
     private TessBaseAPI tessBaseAPI;
+    private EditText editTextVariable;
+    private EditText editTextEditedText;
+
+    private String extractedText;
+    private Button btnUpdateText;
 
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
     private static final int CAMERA_CAPTURE_REQUEST_CODE = 200;
@@ -40,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView imageView;
     private TextView textView;
+
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,16 +56,29 @@ public class MainActivity extends AppCompatActivity {
         copyAssets("eng.traineddata");
         imageView = findViewById(R.id.imageView);
         textView = findViewById(R.id.textView);
+        editTextEditedText = findViewById(R.id.editTextEditedText); // Initialize editTextEditedText
         Button btnCapture = findViewById(R.id.btnCapture);
         tessBaseAPI = new TessBaseAPI();
         tessBaseAPI.init(getFilesDir().getAbsolutePath(), "eng"); // Initialize Tesseract with the "eng" language data
-
-
+        //editTextVariable = findViewById(R.id.editTextVariable);
+        btnUpdateText = findViewById(R.id.btnUpdateText);
 
         btnCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 requestCameraPermission();
+            }
+        });
+
+        btnUpdateText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //String newText = editTextVariable.getText().toString();
+                //textView.setText(newText);
+
+                // Update the extracted text with edited text
+                String editedText = editTextEditedText.getText().toString();
+                String extractedText = editedText;
             }
         });
     }
@@ -133,16 +154,29 @@ public class MainActivity extends AppCompatActivity {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             if (photo != null) {
                 imageView.setImageBitmap(photo);
-                String extractedText = extractTextFromBitmap(photo);
-                Log.d(TAG,extractedText);
+                extractedText = extractTextFromBitmap(photo);
+                Log.d(TAG, extractedText);
                 textView.setText(extractedText);
-                // Toast.makeText(this,  extractedText, Toast.LENGTH_SHORT).show();
+                editTextEditedText.setText(extractedText);
+
+                btnUpdateText.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        String newText = editTextEditedText.getText().toString();
+                        textView.setText(newText);
+
+                        // Update the extracted text with edited text
+                        extractedText = newText;
+                        Log.d(TAG, extractedText);
+                    }
+                });
             } else {
                 Toast.makeText(this, "Failed to capture picture", Toast.LENGTH_SHORT).show();
             }
-
         }
     }
+
+
     private String extractTextFromBitmap(Bitmap bitmap) {
         tessBaseAPI.setImage(bitmap);
         return tessBaseAPI.getUTF8Text();
