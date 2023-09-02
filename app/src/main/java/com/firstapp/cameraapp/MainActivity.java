@@ -5,7 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.nfc.Tag;
+//import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -15,7 +15,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.content.res.AssetManager;
-import android.os.Bundle;
+//import android.os.Bundle;
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
@@ -25,13 +25,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+//import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-//import android.widget.TextView;
+////import android.widget.TextView;
 import android.widget.EditText;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
+//import android.provider.MediaStore;
+//import android.util.Log;
 
 
 
@@ -48,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "app";
 
     private ImageView imageView;
+    private static final int targetWidth = 10;
+    private static final int targetHeight = 10;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -153,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == CAMERA_CAPTURE_REQUEST_CODE && resultCode == RESULT_OK) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             if (photo != null) {
+                Bitmap resizedPhoto = resizeBitmap(photo, targetWidth, targetHeight);
                 imageView.setImageBitmap(photo);
                 final String[] extractedText = {extractTextFromBitmap(photo)};
                 Log.d(TAG, extractedText[0]);
@@ -182,5 +187,22 @@ public class MainActivity extends AppCompatActivity {
     private String extractTextFromBitmap(Bitmap bitmap) {
         tessBaseAPI.setImage(bitmap);
         return tessBaseAPI.getUTF8Text();
+    }
+    private Bitmap resizeBitmap(Bitmap originalBitmap, int newWidth, int newHeight) {
+        int width = originalBitmap.getWidth();
+        int height = originalBitmap.getHeight();
+
+        // Calculate the scale factors for resizing
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+
+        // Create a matrix for the scaling operation
+        android.graphics.Matrix matrix = new android.graphics.Matrix();
+
+        // Resize the bitmap using the matrix
+        matrix.postScale(scaleWidth, scaleHeight);
+
+        // Create and return the resized bitmap
+        return Bitmap.createBitmap(originalBitmap, 0, 0, width, height, matrix, false);
     }
 }
