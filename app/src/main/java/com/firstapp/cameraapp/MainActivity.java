@@ -162,13 +162,18 @@ public class MainActivity extends AppCompatActivity {
                 // Log the size
                 Log.d(TAG, "Original:\nImage Width: " + imageWidth + " pixels");
                 Log.d(TAG, "Image Height: " + imageHeight + " pixels");
-                Bitmap resizedPhoto = resizeBitmap(photo, targetWidth, targetHeight);   //calling resizeBitmap func to resize photo
-                imageView.setImageBitmap(resizedPhoto);
-                imageWidth = resizedPhoto.getWidth();
-                imageHeight = resizedPhoto.getHeight();
+                Bitmap resizedPhoto = resizeBitmap(photo, targetWidth, targetHeight);   //calling resizeBitmap func to resize photo and to convert into grayscale in same func
+
+                // Enhance contrast
+                Bitmap enhancedBitmap = enhanceContrast(resizedPhoto);
+
+                imageView.setImageBitmap(enhancedBitmap);    // Image show
+
+                imageWidth = enhancedBitmap.getWidth();      // print width and height of image
+                imageHeight = enhancedBitmap.getHeight();
                 Log.d(TAG, "Resized:\nImage Width: " + imageWidth + " pixels");
                 Log.d(TAG, "Image Height: " + imageHeight + " pixels");
-                final String[] extractedText = {extractTextFromBitmap(resizedPhoto)};
+                final String[] extractedText = {extractTextFromBitmap(enhancedBitmap)};
                 Log.d(TAG, extractedText[0]);
                 //editTextVariable.setText(extractedText[0]);
 
@@ -210,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Resize the bitmap using the matrix
         matrix.postScale(scaleWidth, scaleHeight);
+        Log.d(TAG, "Image resized! ");
 
         // Applying grayscale conversion
         Bitmap grayScaleImage = Bitmap.createBitmap(originalBitmap,0,0,width,height,matrix,false);
@@ -231,8 +237,32 @@ public class MainActivity extends AppCompatActivity {
         //new canvas for grayscale image
         Canvas canvas = new Canvas(grayscaleBitmap);
         canvas.drawBitmap(grayScaleImage,0,0,paint);
+        Log.d(TAG, "GrayScale conversion completed!");
 
         // Create and return the resized bitmap
-        return grayscaleBitmap;//Bitmap.createBitmap(originalBitmap, 0, 0, width, height, matrix, false);
+        return grayscaleBitmap; //Bitmap.createBitmap(originalBitmap, 0, 0, width, height, matrix, false); //grayscaleBitmap;
+    }
+
+    private Bitmap enhanceContrast(Bitmap bitmap) {
+        // Create a new bitmap for the enhanced image
+        Bitmap enhancedBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(enhancedBitmap);
+        Paint paint = new Paint();
+
+        // Create a ColorMatrix to apply contrast adjustment
+        ColorMatrix colorMatrix = new ColorMatrix();
+        colorMatrix.setSaturation(0); // 0 means fully grayscale
+
+        // Create a ColorMatrixColorFilter with the grayscale matrix
+        ColorMatrixColorFilter filter = new ColorMatrixColorFilter(colorMatrix);
+        paint.setColorFilter(filter);
+
+        // Apply the ColorMatrixColorFilter to the canvas
+        canvas.drawBitmap(bitmap, 0, 0, paint);
+
+        Log.d(TAG, "Contrast enhancement completed!");
+
+        return enhancedBitmap;
     }
 }

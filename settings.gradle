@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "camera app"
+rootProject.name = "Text Extractor"
 include ':app'
