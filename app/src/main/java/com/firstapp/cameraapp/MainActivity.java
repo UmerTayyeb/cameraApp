@@ -5,7 +5,10 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-//import android.nfc.Tag;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -15,7 +18,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.content.res.AssetManager;
-//import android.os.Bundle;
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
@@ -25,15 +27,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-//import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-////import android.widget.TextView;
 import android.widget.EditText;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
-//import android.provider.MediaStore;
-//import android.util.Log;
+
 
 
 
@@ -50,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "app";
 
     private ImageView imageView;
-    private static final int targetWidth = 10;
-    private static final int targetHeight = 10;
+    private static final int targetWidth = 600;
+    private static final int targetHeight = 800;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -157,9 +156,19 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == CAMERA_CAPTURE_REQUEST_CODE && resultCode == RESULT_OK) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             if (photo != null) {
-                Bitmap resizedPhoto = resizeBitmap(photo, targetWidth, targetHeight);
-                imageView.setImageBitmap(photo);
-                final String[] extractedText = {extractTextFromBitmap(photo)};
+                int imageWidth = photo.getWidth();
+                int imageHeight = photo.getHeight();
+
+                // Log the size
+                Log.d(TAG, "Original:\nImage Width: " + imageWidth + " pixels");
+                Log.d(TAG, "Image Height: " + imageHeight + " pixels");
+                Bitmap resizedPhoto = resizeBitmap(photo, targetWidth, targetHeight);   //calling resizeBitmap func to resize photo
+                imageView.setImageBitmap(resizedPhoto);
+                imageWidth = resizedPhoto.getWidth();
+                imageHeight = resizedPhoto.getHeight();
+                Log.d(TAG, "Resized:\nImage Width: " + imageWidth + " pixels");
+                Log.d(TAG, "Image Height: " + imageHeight + " pixels");
+                final String[] extractedText = {extractTextFromBitmap(resizedPhoto)};
                 Log.d(TAG, extractedText[0]);
                 //editTextVariable.setText(extractedText[0]);
 
@@ -202,7 +211,28 @@ public class MainActivity extends AppCompatActivity {
         // Resize the bitmap using the matrix
         matrix.postScale(scaleWidth, scaleHeight);
 
+        // Applying grayscale conversion
+        Bitmap grayScaleImage = Bitmap.createBitmap(originalBitmap,0,0,width,height,matrix,false);
+
+        //Color matrix for grayscale conversion
+        ColorMatrix colorMatrix = new ColorMatrix();
+        colorMatrix.setSaturation(0); // 0 means fully grayscale
+
+        // Create a ColorMatrixColorFilter with the grayscale matrix
+        ColorMatrixColorFilter filter = new ColorMatrixColorFilter(colorMatrix);
+
+        //Paint object with grascale filter
+        Paint paint = new Paint();
+        paint.setColorFilter(filter);
+
+        //new bitmap for grayscale image
+        Bitmap grayscaleBitmap = Bitmap.createBitmap(grayScaleImage.getWidth(),grayScaleImage.getHeight(),Bitmap.Config.ARGB_8888);
+
+        //new canvas for grayscale image
+        Canvas canvas = new Canvas(grayscaleBitmap);
+        canvas.drawBitmap(grayScaleImage,0,0,paint);
+
         // Create and return the resized bitmap
-        return Bitmap.createBitmap(originalBitmap, 0, 0, width, height, matrix, false);
+        return grayscaleBitmap;//Bitmap.createBitmap(originalBitmap, 0, 0, width, height, matrix, false);
     }
 }
